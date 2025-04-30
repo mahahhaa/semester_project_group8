@@ -1,6 +1,12 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+import networkx as nx
+from dijkstra_algorithm import dijkstra, reconstruct_path
+from activity_selection import select_activities
+from kmp_algorithm import kmp_search
+
+
 class SmartCampusGUI:
     def __init__(self, root):
         self.root = root
@@ -106,14 +112,32 @@ class SmartCampusGUI:
     def find_path(self):
         start = self.start_building.get()
         end = self.end_building.get()
-        self.result_box.insert(tk.END, f"Path from {start} to {end}\n")
+
+        distances, previous = dijkstra(self.graph, start)
+        path = reconstruct_path(previous, start, end)
+        cost = distances[end]
+
+        if path:
+            self.result_box.insert(tk.END, f"Shortest path from {start} to {end}:\n{' -> '.join(path)}\nCost: {cost}\n\n")
+        else:
+            self.result_box.insert(tk.END, f"No path found from {start} to {end}.\n\n")
 
     def show_mst(self):
         self.result_box.insert(tk.END, "Displaying optimal maintenance route...\n")
 
     def search_building(self):
         query = self.search_entry.get()
-        self.result_box.insert(tk.END, f"Looking for: {query}\n")
+        buildings = ["Titan Hall", "Langsdorf Hall", "McCarthy Hall", "Pollak Library", "Computer Science", "Nutwood Parking Structure"]
+    
+        matches = [b for b in buildings if kmp_search(b, query)]
+        if matches:
+            self.result_box.insert(tk.END, f"Search results for '{query}':\n")
+            for match in matches:
+                self.result_box.insert(tk.END, f"- {match}\n")
+        else:
+            self.result_box.insert(tk.END, f"No buildings found matching '{query}'.\n")
+        self.result_box.insert(tk.END, "\n")
+
 
     def add_task(self):
         name = self.task_name.get()
@@ -123,7 +147,11 @@ class SmartCampusGUI:
         self.result_box.insert(tk.END, f"Task Added. {name} ({start}-{end})\n")
 
     def optimize_tasks(self):
-        self.result_box.insert(tk.END, f"Optimizing {len(self.task_list)} tasks...\n")
+        optimized = select_activities(self.task_list)
+        self.result_box.insert(tk.END, "Optimized Task Schedule:\n")
+        for name, start, end in optimized:
+            self.result_box.insert(tk.END, f"- {name} ({start}-{end})\n")
+        self.result_box.insert(tk.END, "\n")
 
     def sort_tasks(self):
         criteria = self.sort_option.get()
@@ -131,6 +159,25 @@ class SmartCampusGUI:
 
     def show_map(self):
         self.result_box.insert(tk.END, "Displaying campus graph...\n")
+    
+    def build_graph(self):
+        G = nx.Graph()  # Create a new graph
+
+        # Add buildings (nodes) and connections (edges) with weights
+        edges = [
+            ("Titan Hall", "Langsdorf Hall", 3),
+            ("Langsdorf Hall", "McCarthy Hall", 4),
+            ("McCarthy Hall", "Pollak Library", 2),
+            ("Pollak Library", "Computer Science", 5),
+            ("Computer Science", "Nutwood Parking Structure", 6)
+        ]
+    
+        for u, v, w in edges:
+            G.add_edge(u, v, weight=w)
+    
+        return G
+
+    
 
 
 if __name__ == "__main__":
