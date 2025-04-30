@@ -18,7 +18,7 @@ class SmartCampusGUI:
         title_label = ttk.Label(root, text="CSUF Campus Navigator",font=("Arial", 16, "bold"), foreground="darkblue", anchor="center")
         title_label.pack(pady=(15, 10))
         
-
+        self.graph = self.build_graph()
         
         #Shortest Path Algorithm: Implement Dijkstra’s algorithm to find the shortest path 
         #between two buildings. Refer to dijkstra algorithm.py.
