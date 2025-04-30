@@ -1,0 +1,30 @@
+# Ignore Python bytecode and cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Ignore virtual environments
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+
+# Ignore VS Code workspace settings
+.vscode/
+
+# Ignore macOS and Windows system files
+.DS_Store
+Thumbs.db
+
+# Ignore Jupyter notebook checkpoints (if used)
+.ipynb_checkpoints/
+
+# Ignore log files
+*.log
+
+# Ignore test coverage reports
+htmlcov/
+*.cover
+.coverage
+coverage.xml
