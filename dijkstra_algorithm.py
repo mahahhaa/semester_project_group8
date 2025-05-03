@@ -1,7 +1,6 @@
 import heapq
 
 def dijkstra(graph, start):
-    # graph is an adjacency list: { node: [(neighbor, weight), ...] }
     distances = {node: float('inf') for node in graph}
     distances[start] = 0
 
