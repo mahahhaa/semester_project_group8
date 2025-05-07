@@ -1,25 +1,25 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-import networkx as nx
 from dijkstra_algorithm import dijkstra, reconstruct_path
 from activity_selection import select_activities
 from kmp_algorithm import kmp_search
 
+from networkx_utils import build_graph, draw_graph
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class SmartCampusGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Smart Campus Navigator & Task Scheduler")
         self.root.geometry("1000x600")
-
-        self.task_list = []
+        self.tasks = []
 
         title_label = ttk.Label(root, text="CSUF Campus Navigator",font=("Arial", 16, "bold"), foreground="darkblue", anchor="center")
         title_label.pack(pady=(15, 10))
         
-        self.graph = self.build_graph()
-        
+        self.graph = build_graph()
+                
         #Shortest Path Algorithm: Implement Dijkstra’s algorithm to find the shortest path 
         #between two buildings. Refer to dijkstra algorithm.py.
         
@@ -31,7 +31,7 @@ class SmartCampusGUI:
 
         self.start_building = tk.StringVar()
         self.end_building = tk.StringVar()
-        buildings = ["Titan Hall" , "Langsdorf Hall", "McCarthy Hall", "Pollak Library", "Computer Science", "Nutwood Parking Structure"]  #will update more based on mapping
+        buildings = list(self.graph.nodes())  #will update more based on mapping
 
         ttk.Label(shortest_path, text="Start:").pack(side="left", padx=5)
         ttk.Combobox(shortest_path, textvariable=self.start_building, values=buildings, width=20).pack(side="left")
@@ -39,10 +39,6 @@ class SmartCampusGUI:
         ttk.Combobox(shortest_path, textvariable=self.end_building, values=buildings, width=20).pack(side="left")
 
         ttk.Button(shortest_path, text="Find Shortest Path", command=self.find_path).pack(side="left", padx=10)
-
-        #Minimum Spanning Tree (MST): Use Prim’s or Kruskal’s algorithm to deter-
-        #mine optimal maintenance routes covering all buildings. See prim algorithm.py and
-        #kruskal algorithm.py.
         
         mst_route = tk.LabelFrame(root, text="Maintenance Routes",fg="blue",font=("Arial", 12, "bold"))
         mst_route.pack(fill="x", padx=10, pady=5)
@@ -50,9 +46,6 @@ class SmartCampusGUI:
 
         spacing = ttk.LabelFrame(root)
         spacing.pack(fill="x", padx=10, pady=(0, 15))
-
-        #String Matching: Implement KMP or Boyer-Moore algorithms to search for building
-        #names or room numbers. See kmp algorithm.py and boyer moore.py.
 
         search_building = tk.LabelFrame(root, text="Building Search",fg="blue",font=("Arial", 12, "bold"))
         search_building.pack(fill="x", padx=10, pady=5)
@@ -62,9 +55,6 @@ class SmartCampusGUI:
 
         spacing = ttk.LabelFrame(root)
         spacing.pack(fill="x", padx=10, pady=(0, 15))
-
-        #Task Scheduling: Apply the Activity Selection Problem (greedy approach) to sched-
-        #ule tasks without overlaps. Refer to activity selection.py
 
         task_schedule = tk.LabelFrame(root, text="Task Scheduling",fg="blue",font=("Arial", 12, "bold"))
         task_schedule.pack(fill="x", padx=10, pady=5)
@@ -87,34 +77,33 @@ class SmartCampusGUI:
         spacing = ttk.LabelFrame(root)
         spacing.pack(fill="x", padx=10, pady=(0, 15))
 
-        #Sorting: Use Merge Sort or Quick Sort to organize tasks by priority or time. Refer
-        #to merge sort.py and quick sort.py.
-
         sort_tasks = tk.LabelFrame(root, text="Sort Tasks",fg="blue",font=("Arial", 12, "bold"))
         sort_tasks.pack(fill="x", padx=10, pady=5)
         self.sort_option = tk.StringVar()
         ttk.Label(sort_tasks, text="Sort tasks by: ").pack(side="left")
-        ttk.Combobox(sort_tasks, textvariable=self.sort_option, values=["Time", "Priority"], width=15).pack(side="left", padx=5)
+        ttk.Combobox(sort_tasks, textvariable=self.sort_option, values=["Start Time", "End Time", "Priority"], width=15).pack(side="left", padx=5)
         ttk.Button(sort_tasks, text="Sort", command=self.sort_tasks).pack(side="left", padx=5)
 
-        #Campus Map Display
         ttk.Button(root, text="Display Campus Map", command=self.show_map).pack(pady=5)
 
-
-        #Output Screen
         output_frame = ttk.LabelFrame(root, text="Outputs: ")
         output_frame.pack(fill="both", expand=True, padx=10, pady=5)
         self.result_box = tk.Text(output_frame, wrap="word")
         self.result_box.pack(fill="both", expand=True)
 
-
-    #Input algorithms and functions here...
     def find_path(self):
         start = self.start_building.get()
         end = self.end_building.get()
 
-        distances, previous = dijkstra(self.graph, start)
+        adj = {
+        node: [(nbr, data['weight']) 
+               for nbr, data in self.graph[node].items()]
+        for node in self.graph.nodes()
+    }
+
+        distances, previous = dijkstra(adj, start)
         path = reconstruct_path(previous, start, end)
+        self.last_path = path
         cost = distances[end]
 
         if path:
@@ -122,12 +111,14 @@ class SmartCampusGUI:
         else:
             self.result_box.insert(tk.END, f"No path found from {start} to {end}.\n\n")
 
+
     def show_mst(self):
         self.result_box.insert(tk.END, "Displaying optimal maintenance route...\n")
 
+
     def search_building(self):
         query = self.search_entry.get()
-        buildings = ["Titan Hall", "Langsdorf Hall", "McCarthy Hall", "Pollak Library", "Computer Science", "Nutwood Parking Structure"]
+        buildings = list(self.graph.nodes())
     
         matches = [b for b in buildings if kmp_search(b, query)]
         if matches:
@@ -141,43 +132,58 @@ class SmartCampusGUI:
 
     def add_task(self):
         name = self.task_name.get()
-        start = self.task_start.get()
-        end = self.task_end.get()
-        self.task_list.append((name, start, end))
+        start = int(self.task_start.get())
+        end = int(self.task_end.get())
+        self.tasks.append({"name": name, "start": start, "end": end})
         self.result_box.insert(tk.END, f"Task Added. {name} ({start}-{end})\n")
 
+
     def optimize_tasks(self):
-        optimized = select_activities(self.task_list)
+        task_tuples = [(task['name'], task['start'], task['end']) for task in self.tasks]
+        optimized = select_activities(task_tuples)
+    
         self.result_box.insert(tk.END, "Optimized Task Schedule:\n")
         for name, start, end in optimized:
             self.result_box.insert(tk.END, f"- {name} ({start}-{end})\n")
         self.result_box.insert(tk.END, "\n")
 
+
     def sort_tasks(self):
         criteria = self.sort_option.get()
         self.result_box.insert(tk.END, f"Sorting tasks by {criteria}\n")
 
+        criteria_map = {
+            "Start Time": "start",
+            "End Time": "end",
+            "Priority": "priority"
+        }
+
+        if criteria not in criteria_map:
+            self.result_box.insert(tk.END, "Invalid sorting criteria.\n")
+            return
+
+        key = criteria_map[criteria]
+        sorted_tasks = sorted(self.tasks, key=lambda task: int(task.get(key, 0)))
+    
+        self.result_box.delete(1.0, tk.END)
+        self.result_box.insert(tk.END, f"Tasks sorted by {criteria}:\n")
+        for task in sorted_tasks:
+            name = task['name']
+            start = task['start']
+            end = task['end']
+            priority = task.get('priority', 0)
+            self.result_box.insert(tk.END, f"- {name}: Start {start}, End {end}\n")
+
+
     def show_map(self):
-        self.result_box.insert(tk.END, "Displaying campus graph...\n")
-    
-    def build_graph(self):
-        G = nx.Graph()  # Create a new graph
+        win = tk.Toplevel(self.root)
+        win.title("Campus Map")
+        win.geometry("600x500")
 
-        # Add buildings (nodes) and connections (edges) with weights
-        edges = [
-            ("Titan Hall", "Langsdorf Hall", 3),
-            ("Langsdorf Hall", "McCarthy Hall", 4),
-            ("McCarthy Hall", "Pollak Library", 2),
-            ("Pollak Library", "Computer Science", 5),
-            ("Computer Science", "Nutwood Parking Structure", 6)
-        ]
-    
-        for u, v, w in edges:
-            G.add_edge(u, v, weight=w)
-    
-        return G
-
-    
+        fig = draw_graph(self.graph, highlight_path=getattr(self, 'last_path', None))
+        canvas = FigureCanvasTkAgg(fig, master=win)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill='both', expand=True)
 
 
 if __name__ == "__main__":
