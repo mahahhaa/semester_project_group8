@@ -21,7 +21,7 @@ class SmartCampusGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Smart Campus Navigator & Task Scheduler")
-        self.root.geometry("1000x600")
+        self.root.geometry("1215x600")
         self.tasks = []
 
         title_label = ttk.Label(root, text="CSUF Campus Navigator",font=("Arial", 16, "bold"), foreground="darkblue", anchor="center")
