@@ -8,6 +8,15 @@ from kmp_algorithm import kmp_search
 from networkx_utils import build_graph, draw_graph
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+def convert_to_24_hour(hour, minute, ampm):
+        hour = int(hour)
+        minute = int(minute)
+        if ampm == "PM" and hour != 12:
+            hour += 12
+        if ampm == "AM" and hour == 12:
+            hour = 0
+        return hour + minute / 60
+
 class SmartCampusGUI:
     def __init__(self, root):
         self.root = root
@@ -56,7 +65,7 @@ class SmartCampusGUI:
         spacing = ttk.LabelFrame(root)
         spacing.pack(fill="x", padx=10, pady=(0, 15))
 
-        task_schedule = tk.LabelFrame(root, text="Task Scheduling",fg="blue",font=("Arial", 12, "bold"))
+        task_schedule = tk.LabelFrame(root, text="Task Scheduling", fg="blue", font=("Arial", 12, "bold"))
         task_schedule.pack(fill="x", padx=10, pady=5)
 
         ttk.Label(task_schedule, text="Task name:").pack(side="left", padx=5)
@@ -64,12 +73,24 @@ class SmartCampusGUI:
         self.task_name.pack(side="left")
 
         ttk.Label(task_schedule, text="Start time:").pack(side="left", padx=5)
-        self.task_start = ttk.Entry(task_schedule, width=8)
-        self.task_start.pack(side="left")
+        self.start_hour = ttk.Combobox(task_schedule, width=5, values=[str(i) for i in range(1, 13)])
+        self.start_hour.pack(side="left")
+        self.start_minute = ttk.Combobox(task_schedule, width=5, values=[f"{i:02}" for i in range(0, 60, 5)])
+        self.start_minute.pack(side="left")
+        self.start_ampm = ttk.Combobox(task_schedule, width=5, values=["AM", "PM"])
+        self.start_ampm.pack(side="left")
 
         ttk.Label(task_schedule, text="End time:").pack(side="left", padx=5)
-        self.task_end = ttk.Entry(task_schedule, width=8)
-        self.task_end.pack(side="left")
+        self.end_hour = ttk.Combobox(task_schedule, width=5, values=[str(i) for i in range(1, 13)])
+        self.end_hour.pack(side="left")
+        self.end_minute = ttk.Combobox(task_schedule, width=5, values=[f"{i:02}" for i in range(0, 60, 5)])
+        self.end_minute.pack(side="left")
+        self.end_ampm = ttk.Combobox(task_schedule, width=5, values=["AM", "PM"])
+        self.end_ampm.pack(side="left")
+
+        ttk.Label(task_schedule, text="Priority:").pack(side="left", padx=5)
+        self.task_priority = ttk.Entry(task_schedule, width=5)
+        self.task_priority.pack(side="left")
 
         ttk.Button(task_schedule, text="Add Task", command=self.add_task).pack(side="left", padx=5)
         ttk.Button(task_schedule, text="Optimize Schedule", command=self.optimize_tasks).pack(side="left", padx=5)
@@ -77,7 +98,7 @@ class SmartCampusGUI:
         spacing = ttk.LabelFrame(root)
         spacing.pack(fill="x", padx=10, pady=(0, 15))
 
-        sort_tasks = tk.LabelFrame(root, text="Sort Tasks",fg="blue",font=("Arial", 12, "bold"))
+        sort_tasks = tk.LabelFrame(root, text="Sort Tasks", fg="blue", font=("Arial", 12, "bold"))
         sort_tasks.pack(fill="x", padx=10, pady=5)
         self.sort_option = tk.StringVar()
         ttk.Label(sort_tasks, text="Sort tasks by: ").pack(side="left")
@@ -131,12 +152,31 @@ class SmartCampusGUI:
 
 
     def add_task(self):
-        name = self.task_name.get()
-        start = int(self.task_start.get())
-        end = int(self.task_end.get())
-        self.tasks.append({"name": name, "start": start, "end": end})
-        self.result_box.insert(tk.END, f"Task Added. {name} ({start}-{end})\n")
+        name = self.task_name.get().strip()
 
+        if any(task['name'].lower() == name.lower() for task in self.tasks):
+            messagebox.showerror("Duplicate Task", f"A task named '{name}' already exists.")
+            return
+
+        try:
+            start = convert_to_24_hour(self.start_hour.get(), self.start_minute.get(), self.start_ampm.get())
+            end = convert_to_24_hour(self.end_hour.get(), self.end_minute.get(), self.end_ampm.get())
+
+            if start >= end:
+                raise ValueError("Start time must be before end time.")
+
+        except Exception as e:
+            messagebox.showerror("Invalid Time", f"Error in time input: {e}")
+            return
+
+        try:
+            priority = int(self.task_priority.get())
+        except:
+            messagebox.showerror("Invalid Priority", "Priority must be a number.")
+            return
+
+        self.tasks.append({"name": name, "start": start, "end": end, "priority": priority})
+        self.result_box.insert(tk.END, f"Task Added. {name} ({start:.2f}-{end:.2f}, Priority: {priority})\n")
 
     def optimize_tasks(self):
         task_tuples = [(task['name'], task['start'], task['end']) for task in self.tasks]
@@ -173,7 +213,6 @@ class SmartCampusGUI:
             end = task['end']
             priority = task.get('priority', 0)
             self.result_box.insert(tk.END, f"- {name}: Start {start}, End {end}\n")
-
 
     def show_map(self):
         win = tk.Toplevel(self.root)
