@@ -4,17 +4,29 @@ from tkinter import ttk, messagebox
 from dijkstra_algorithm import dijkstra, reconstruct_path
 from activity_selection import select_activities
 from kmp_algorithm import kmp_search
+from mst_algo import compute_mst 
 
 from networkx_utils import build_graph, draw_graph
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from networkx_utils import build_graph, draw_graph, draw_mst
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+def convert_to_24_hour(hour, minute, ampm):
+        hour = int(hour)
+        minute = int(minute)
+        if ampm == "PM" and hour != 12:
+            hour += 12
+        if ampm == "AM" and hour == 12:
+            hour = 0
+        return hour + minute / 60
 
 class SmartCampusGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Smart Campus Navigator & Task Scheduler")
-        self.root.geometry("1000x600")
-
-        self.task_list = []
+        self.root.geometry("1215x600")
+        self.tasks = []
 
         title_label = ttk.Label(root, text="CSUF Campus Navigator",font=("Arial", 16, "bold"), foreground="darkblue", anchor="center")
         title_label.pack(pady=(15, 10))
@@ -40,10 +52,6 @@ class SmartCampusGUI:
         ttk.Combobox(shortest_path, textvariable=self.end_building, values=buildings, width=20).pack(side="left")
 
         ttk.Button(shortest_path, text="Find Shortest Path", command=self.find_path).pack(side="left", padx=10)
-
-        #Minimum Spanning Tree (MST): Use Prim’s or Kruskal’s algorithm to deter-
-        #mine optimal maintenance routes covering all buildings. See prim algorithm.py and
-        #kruskal algorithm.py.
         
         mst_route = tk.LabelFrame(root, text="Maintenance Routes",fg="blue",font=("Arial", 12, "bold"))
         mst_route.pack(fill="x", padx=10, pady=5)
@@ -51,9 +59,6 @@ class SmartCampusGUI:
 
         spacing = ttk.LabelFrame(root)
         spacing.pack(fill="x", padx=10, pady=(0, 15))
-
-        #String Matching: Implement KMP or Boyer-Moore algorithms to search for building
-        #names or room numbers. See kmp algorithm.py and boyer moore.py.
 
         search_building = tk.LabelFrame(root, text="Building Search",fg="blue",font=("Arial", 12, "bold"))
         search_building.pack(fill="x", padx=10, pady=5)
@@ -64,10 +69,7 @@ class SmartCampusGUI:
         spacing = ttk.LabelFrame(root)
         spacing.pack(fill="x", padx=10, pady=(0, 15))
 
-        #Task Scheduling: Apply the Activity Selection Problem (greedy approach) to sched-
-        #ule tasks without overlaps. Refer to activity selection.py
-
-        task_schedule = tk.LabelFrame(root, text="Task Scheduling",fg="blue",font=("Arial", 12, "bold"))
+        task_schedule = tk.LabelFrame(root, text="Task Scheduling", fg="blue", font=("Arial", 12, "bold"))
         task_schedule.pack(fill="x", padx=10, pady=5)
 
         ttk.Label(task_schedule, text="Task name:").pack(side="left", padx=5)
@@ -75,12 +77,24 @@ class SmartCampusGUI:
         self.task_name.pack(side="left")
 
         ttk.Label(task_schedule, text="Start time:").pack(side="left", padx=5)
-        self.task_start = ttk.Entry(task_schedule, width=8)
-        self.task_start.pack(side="left")
+        self.start_hour = ttk.Combobox(task_schedule, width=5, values=[str(i) for i in range(1, 13)])
+        self.start_hour.pack(side="left")
+        self.start_minute = ttk.Combobox(task_schedule, width=5, values=[f"{i:02}" for i in range(0, 60, 5)])
+        self.start_minute.pack(side="left")
+        self.start_ampm = ttk.Combobox(task_schedule, width=5, values=["AM", "PM"])
+        self.start_ampm.pack(side="left")
 
         ttk.Label(task_schedule, text="End time:").pack(side="left", padx=5)
-        self.task_end = ttk.Entry(task_schedule, width=8)
-        self.task_end.pack(side="left")
+        self.end_hour = ttk.Combobox(task_schedule, width=5, values=[str(i) for i in range(1, 13)])
+        self.end_hour.pack(side="left")
+        self.end_minute = ttk.Combobox(task_schedule, width=5, values=[f"{i:02}" for i in range(0, 60, 5)])
+        self.end_minute.pack(side="left")
+        self.end_ampm = ttk.Combobox(task_schedule, width=5, values=["AM", "PM"])
+        self.end_ampm.pack(side="left")
+
+        ttk.Label(task_schedule, text="Priority:").pack(side="left", padx=5)
+        self.task_priority = ttk.Entry(task_schedule, width=5)
+        self.task_priority.pack(side="left")
 
         ttk.Button(task_schedule, text="Add Task", command=self.add_task).pack(side="left", padx=5)
         ttk.Button(task_schedule, text="Optimize Schedule", command=self.optimize_tasks).pack(side="left", padx=5)
@@ -88,17 +102,13 @@ class SmartCampusGUI:
         spacing = ttk.LabelFrame(root)
         spacing.pack(fill="x", padx=10, pady=(0, 15))
 
-        #Sorting: Use Merge Sort or Quick Sort to organize tasks by priority or time. Refer
-        #to merge sort.py and quick sort.py.
-
-        sort_tasks = tk.LabelFrame(root, text="Sort Tasks",fg="blue",font=("Arial", 12, "bold"))
+        sort_tasks = tk.LabelFrame(root, text="Sort Tasks", fg="blue", font=("Arial", 12, "bold"))
         sort_tasks.pack(fill="x", padx=10, pady=5)
         self.sort_option = tk.StringVar()
         ttk.Label(sort_tasks, text="Sort tasks by: ").pack(side="left")
-        ttk.Combobox(sort_tasks, textvariable=self.sort_option, values=["Time", "Priority"], width=15).pack(side="left", padx=5)
+        ttk.Combobox(sort_tasks, textvariable=self.sort_option, values=["Start Time", "End Time", "Priority"], width=15).pack(side="left", padx=5)
         ttk.Button(sort_tasks, text="Sort", command=self.sort_tasks).pack(side="left", padx=5)
 
-        #Campus Map Display
         ttk.Button(root, text="Display Campus Map", command=self.show_map).pack(pady=5)
 
         #Output Screen
@@ -107,8 +117,6 @@ class SmartCampusGUI:
         self.result_box = tk.Text(output_frame, wrap="word")
         self.result_box.pack(fill="both", expand=True)
 
-
-    #Input algorithms and functions here...
     def find_path(self):
         start = self.start_building.get()
         end = self.end_building.get()
@@ -129,8 +137,25 @@ class SmartCampusGUI:
         else:
             self.result_box.insert(tk.END, f"No path found from {start} to {end}.\n\n")
 
+
     def show_mst(self):
-        self.result_box.insert(tk.END, "Displaying optimal maintenance route...\n")
+     try:
+        mst = compute_mst(self.graph)
+        mst_edges = list(mst.edges())
+
+        win = tk.Toplevel(self.root)
+        win.title("Optimal Maintenance Route (MST)")
+        win.geometry("600x500")
+
+        fig = draw_mst(self.graph, mst_edges)
+        canvas = FigureCanvasTkAgg(fig, master=win)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill='both', expand=True)
+
+        self.result_box.insert(tk.END, "Optimal maintenance route (MST) displayed.\n\n")
+     except Exception as e:
+        messagebox.showerror("Error", f"Failed to compute MST: {e}")
+
 
     def search_building(self):
         query = self.search_entry.get()
@@ -147,22 +172,67 @@ class SmartCampusGUI:
 
 
     def add_task(self):
-        name = self.task_name.get()
-        start = self.task_start.get()
-        end = self.task_end.get()
-        self.task_list.append((name, start, end))
-        self.result_box.insert(tk.END, f"Task Added. {name} ({start}-{end})\n")
+        name = self.task_name.get().strip()
+
+        if any(task['name'].lower() == name.lower() for task in self.tasks):
+            messagebox.showerror("Duplicate Task", f"A task named '{name}' already exists.")
+            return
+
+        try:
+            start = convert_to_24_hour(self.start_hour.get(), self.start_minute.get(), self.start_ampm.get())
+            end = convert_to_24_hour(self.end_hour.get(), self.end_minute.get(), self.end_ampm.get())
+
+            if start >= end:
+                raise ValueError("Start time must be before end time.")
+
+        except Exception as e:
+            messagebox.showerror("Invalid Time", f"Error in time input: {e}")
+            return
+
+        try:
+            priority = int(self.task_priority.get())
+        except:
+            messagebox.showerror("Invalid Priority", "Priority must be a number.")
+            return
+
+        self.tasks.append({"name": name, "start": start, "end": end, "priority": priority})
+        self.result_box.insert(tk.END, f"Task Added. {name} ({start:.2f}-{end:.2f}, Priority: {priority})\n")
 
     def optimize_tasks(self):
-        optimized = select_activities(self.task_list)
+        task_tuples = [(task['name'], task['start'], task['end']) for task in self.tasks]
+        optimized = select_activities(task_tuples)
+    
         self.result_box.insert(tk.END, "Optimized Task Schedule:\n")
         for name, start, end in optimized:
             self.result_box.insert(tk.END, f"- {name} ({start}-{end})\n")
         self.result_box.insert(tk.END, "\n")
 
+
     def sort_tasks(self):
         criteria = self.sort_option.get()
         self.result_box.insert(tk.END, f"Sorting tasks by {criteria}\n")
+
+        criteria_map = {
+            "Start Time": "start",
+            "End Time": "end",
+            "Priority": "priority"
+        }
+
+        if criteria not in criteria_map:
+            self.result_box.insert(tk.END, "Invalid sorting criteria.\n")
+            return
+
+        key = criteria_map[criteria]
+        sorted_tasks = sorted(self.tasks, key=lambda task: int(task.get(key, 0)))
+    
+        self.result_box.delete(1.0, tk.END)
+        self.result_box.insert(tk.END, f"Tasks sorted by {criteria}:\n")
+        for task in sorted_tasks:
+            name = task['name']
+            start = task['start']
+            end = task['end']
+            priority = task.get('priority', 0)
+            self.result_box.insert(tk.END, f"- {name}: Start {start}, End {end}\n")
 
     def show_map(self):
         win = tk.Toplevel(self.root)
