@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-import networkx as nx
 from dijkstra_algorithm import dijkstra, reconstruct_path
 from activity_selection import select_activities
 from kmp_algorithm import kmp_search
 
+from networkx_utils import build_graph, draw_graph
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class SmartCampusGUI:
     def __init__(self, root):
@@ -18,8 +19,8 @@ class SmartCampusGUI:
         title_label = ttk.Label(root, text="CSUF Campus Navigator",font=("Arial", 16, "bold"), foreground="darkblue", anchor="center")
         title_label.pack(pady=(15, 10))
         
-        self.graph = self.build_graph()
-        
+        self.graph = build_graph()
+                
         #Shortest Path Algorithm: Implement Dijkstra’s algorithm to find the shortest path 
         #between two buildings. Refer to dijkstra algorithm.py.
         
@@ -31,7 +32,7 @@ class SmartCampusGUI:
 
         self.start_building = tk.StringVar()
         self.end_building = tk.StringVar()
-        buildings = ["Titan Hall" , "Langsdorf Hall", "McCarthy Hall", "Pollak Library", "Computer Science", "Nutwood Parking Structure"]  #will update more based on mapping
+        buildings = list(self.graph.nodes())  #will update more based on mapping
 
         ttk.Label(shortest_path, text="Start:").pack(side="left", padx=5)
         ttk.Combobox(shortest_path, textvariable=self.start_building, values=buildings, width=20).pack(side="left")
@@ -100,7 +101,6 @@ class SmartCampusGUI:
         #Campus Map Display
         ttk.Button(root, text="Display Campus Map", command=self.show_map).pack(pady=5)
 
-
         #Output Screen
         output_frame = ttk.LabelFrame(root, text="Outputs: ")
         output_frame.pack(fill="both", expand=True, padx=10, pady=5)
@@ -113,8 +113,15 @@ class SmartCampusGUI:
         start = self.start_building.get()
         end = self.end_building.get()
 
-        distances, previous = dijkstra(self.graph, start)
+        adj = {
+        node: [(nbr, data['weight']) 
+               for nbr, data in self.graph[node].items()]
+        for node in self.graph.nodes()
+    }
+
+        distances, previous = dijkstra(adj, start)
         path = reconstruct_path(previous, start, end)
+        self.last_path = path
         cost = distances[end]
 
         if path:
@@ -127,7 +134,7 @@ class SmartCampusGUI:
 
     def search_building(self):
         query = self.search_entry.get()
-        buildings = ["Titan Hall", "Langsdorf Hall", "McCarthy Hall", "Pollak Library", "Computer Science", "Nutwood Parking Structure"]
+        buildings = list(self.graph.nodes())
     
         matches = [b for b in buildings if kmp_search(b, query)]
         if matches:
@@ -158,26 +165,14 @@ class SmartCampusGUI:
         self.result_box.insert(tk.END, f"Sorting tasks by {criteria}\n")
 
     def show_map(self):
-        self.result_box.insert(tk.END, "Displaying campus graph...\n")
-    
-    def build_graph(self):
-        G = nx.Graph()  # Create a new graph
+        win = tk.Toplevel(self.root)
+        win.title("Campus Map")
+        win.geometry("600x500")
 
-        # Add buildings (nodes) and connections (edges) with weights
-        edges = [
-            ("Titan Hall", "Langsdorf Hall", 3),
-            ("Langsdorf Hall", "McCarthy Hall", 4),
-            ("McCarthy Hall", "Pollak Library", 2),
-            ("Pollak Library", "Computer Science", 5),
-            ("Computer Science", "Nutwood Parking Structure", 6)
-        ]
-    
-        for u, v, w in edges:
-            G.add_edge(u, v, weight=w)
-    
-        return G
-
-    
+        fig = draw_graph(self.graph, highlight_path=getattr(self, 'last_path', None))
+        canvas = FigureCanvasTkAgg(fig, master=win)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill='both', expand=True)
 
 
 if __name__ == "__main__":
