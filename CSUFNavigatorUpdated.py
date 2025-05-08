@@ -4,8 +4,9 @@ from tkinter import ttk, messagebox
 from dijkstra_algorithm import dijkstra, reconstruct_path
 from activity_selection import select_activities
 from kmp_algorithm import kmp_search
+from mst_algo import compute_mst 
 
-from networkx_utils import build_graph, draw_graph
+from networkx_utils import build_graph, draw_graph, draw_mst
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 def convert_to_24_hour(hour, minute, ampm):
@@ -134,7 +135,22 @@ class SmartCampusGUI:
 
 
     def show_mst(self):
-        self.result_box.insert(tk.END, "Displaying optimal maintenance route...\n")
+     try:
+        mst = compute_mst(self.graph)
+        mst_edges = list(mst.edges())
+
+        win = tk.Toplevel(self.root)
+        win.title("Optimal Maintenance Route (MST)")
+        win.geometry("600x500")
+
+        fig = draw_mst(self.graph, mst_edges)
+        canvas = FigureCanvasTkAgg(fig, master=win)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill='both', expand=True)
+
+        self.result_box.insert(tk.END, "Optimal maintenance route (MST) displayed.\n\n")
+     except Exception as e:
+        messagebox.showerror("Error", f"Failed to compute MST: {e}")
 
 
     def search_building(self):

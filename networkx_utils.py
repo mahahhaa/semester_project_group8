@@ -47,3 +47,13 @@ def draw_graph(graph, highlight_path=None):
         )
 
     return fig
+
+
+def draw_mst(graph, mst_edges):
+    pos = nx.spring_layout(graph)
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    nx.draw(graph, pos, ax=ax, with_labels=True, node_color='lightblue', edge_color='gray', node_size=600)
+    nx.draw_networkx_edges(graph, pos, edgelist=mst_edges, edge_color='green', width=3)
+    return fig
+
