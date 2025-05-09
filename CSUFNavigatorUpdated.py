@@ -29,8 +29,28 @@ class SmartCampusGUI:
         self.root.geometry("1215x600")
         self.tasks = []
 
-        title_label = ttk.Label(root, text="CSUF Campus Navigator",font=("Arial", 16, "bold"), foreground="darkblue", anchor="center")
-        title_label.pack(pady=(15, 10))
+       
+        try:
+         logo = tk.PhotoImage(file="school_logo.png")
+         logo = logo.subsample(8, 8)  
+        except Exception as e:
+         logo = None
+         print(f"Error loading logo: {e}")
+
+
+        title_frame = ttk.Frame(root)
+        title_frame.pack(pady=(15, 10))
+
+        if logo:
+         logo_label = ttk.Label(title_frame, image=logo)
+         logo_label.image = logo  
+         logo_label.pack(side="left", padx=10)
+
+        title_label = ttk.Label(title_frame, text="CSUF Campus Navigator", font=("Arial", 25, "bold"), foreground="orange")
+        title_label.pack(side="left")
+
+    
+
         
         self.graph = build_graph()
                 
