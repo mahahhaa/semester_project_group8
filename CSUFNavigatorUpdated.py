@@ -6,6 +6,9 @@ from activity_selection import select_activities
 from kmp_algorithm import kmp_search
 from mst_algo import compute_mst 
 
+from networkx_utils import build_graph, draw_graph
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 from networkx_utils import build_graph, draw_graph, draw_mst
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -108,6 +111,7 @@ class SmartCampusGUI:
 
         ttk.Button(root, text="Display Campus Map", command=self.show_map).pack(pady=5)
 
+        #Output Screen
         output_frame = ttk.LabelFrame(root, text="Outputs: ")
         output_frame.pack(fill="both", expand=True, padx=10, pady=5)
         self.result_box = tk.Text(output_frame, wrap="word")
