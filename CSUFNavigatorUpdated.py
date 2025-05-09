@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from tkinter.scrolledtext import ScrolledText
 
 from dijkstra_algorithm import dijkstra, reconstruct_path
 from activity_selection import select_activities
@@ -92,7 +93,7 @@ class SmartCampusGUI:
         self.end_ampm = ttk.Combobox(task_schedule, width=5, values=["AM", "PM"])
         self.end_ampm.pack(side="left")
 
-        ttk.Label(task_schedule, text="Priority:").pack(side="left", padx=5)
+        ttk.Label(task_schedule, text="Priority (1-5):").pack(side="left", padx=5)
         self.task_priority = ttk.Entry(task_schedule, width=5)
         self.task_priority.pack(side="left")
 
@@ -109,13 +110,24 @@ class SmartCampusGUI:
         ttk.Combobox(sort_tasks, textvariable=self.sort_option, values=["Start Time", "End Time", "Priority"], width=15).pack(side="left", padx=5)
         ttk.Button(sort_tasks, text="Sort", command=self.sort_tasks).pack(side="left", padx=5)
 
-        ttk.Button(root, text="Display Campus Map", command=self.show_map).pack(pady=5)
+        tk.Button(root, text="Display Campus Map",fg="blue", font=("Arial", 12, "bold"), command=self.show_map).pack(pady=5)
+
 
         #Output Screen
-        output_frame = ttk.LabelFrame(root, text="Outputs: ")
+        output_frame = tk.LabelFrame(root, text="Outputs: ", fg="blue", font=("Arial", 12, "bold"))
         output_frame.pack(fill="both", expand=True, padx=10, pady=5)
-        self.result_box = tk.Text(output_frame, wrap="word")
-        self.result_box.pack(fill="both", expand=True)
+
+
+        self.result_box = ScrolledText(
+         output_frame,
+         wrap="word",
+         font=("Courier New", 10),
+         bg="#ffffff",
+         fg="#000000",
+         insertbackground="black"  
+)
+        self.result_box.pack(fill="both", expand=True, padx=5, pady=5)
+        self.result_box.insert(tk.END, "Results will appear here...\n")
 
     def find_path(self):
         start = self.start_building.get()
@@ -174,29 +186,39 @@ class SmartCampusGUI:
     def add_task(self):
         name = self.task_name.get().strip()
 
+
         if any(task['name'].lower() == name.lower() for task in self.tasks):
             messagebox.showerror("Duplicate Task", f"A task named '{name}' already exists.")
             return
+
 
         try:
             start = convert_to_24_hour(self.start_hour.get(), self.start_minute.get(), self.start_ampm.get())
             end = convert_to_24_hour(self.end_hour.get(), self.end_minute.get(), self.end_ampm.get())
 
+
             if start >= end:
                 raise ValueError("Start time must be before end time.")
+
 
         except Exception as e:
             messagebox.showerror("Invalid Time", f"Error in time input: {e}")
             return
 
+
         try:
             priority = int(self.task_priority.get())
-        except:
-            messagebox.showerror("Invalid Priority", "Priority must be a number.")
+            if not (1 <= priority <= 5):
+                raise ValueError("Priority must be between 1 (highest) and 5 (lowest).")
+       
+        except Exception as e:
+            messagebox.showerror("Invalid Priority", f"{e}")
             return
+
 
         self.tasks.append({"name": name, "start": start, "end": end, "priority": priority})
         self.result_box.insert(tk.END, f"Task Added. {name} ({start:.2f}-{end:.2f}, Priority: {priority})\n")
+
 
     def optimize_tasks(self):
         task_tuples = [(task['name'], task['start'], task['end']) for task in self.tasks]
