@@ -279,9 +279,12 @@ class SmartCampusGUI:
     def show_map(self):
         win = tk.Toplevel(self.root)
         win.title("Campus Map")
-        win.geometry("600x500")
+        win.geometry("1000x800")
 
-        fig = draw_graph(self.graph, highlight_path=getattr(self, 'last_path', None))
+        fig = draw_graph(
+        self.graph,
+        highlight_path=getattr(self, 'last_path', None),
+    )
         canvas = FigureCanvasTkAgg(fig, master=win)
         canvas.draw()
         canvas.get_tk_widget().pack(fill='both', expand=True)
