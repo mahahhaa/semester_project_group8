@@ -26,7 +26,7 @@ class SmartCampusGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Smart Campus Navigator & Task Scheduler")
-        self.root.geometry("1215x600")
+        self.root.geometry("1215x700")
         self.tasks = []
 
        
