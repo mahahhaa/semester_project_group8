@@ -28,8 +28,6 @@ coords = {
     "Clayes Performing Arts Center": (33.88056756135152, -117.88670313385623),
 }
 
-# right after your coords dict
-
 nicknames = {
     "Eastside South Parking Structure": "ESPS",
     "Eastside North Parking Structure": "ENPS",
@@ -97,7 +95,7 @@ category_style = {
     'Student Services': {'color': 'gold',      'shape': 'D'}
 }
 
-# Define edges between directly connected buildings (sample based on campus map)
+# Edges between nodes based on the campus layout
 edge_list = [
     ('Eastside South Parking Structure', 'Eastside North Parking Structure'),
     ('Eastside North Parking Structure', 'Education-Classroom'),
@@ -219,7 +217,7 @@ def draw_graph(graph, highlight_path=None, background_image=None):
                                width=4, edge_color='red', ax=ax)
         
     label_map = {
-        node: nicknames.get(node, "")   # empty string if no nickname
+        node: nicknames.get(node, "") 
         for node in graph.nodes()
     }
      
