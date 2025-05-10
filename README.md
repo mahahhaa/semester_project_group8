@@ -14,10 +14,10 @@ navigate between buidlings and organize their tasks
 
 # How to run GUI
 
-Install python (if you haven't)
-Install Networkx : pip install networkx
-Install Matplotlib: pip install matplotlib
+- Install python (if you haven't)
+- Install Networkx : pip install networkx
+- Install Matplotlib: pip install matplotlib
 
 Run the program:
-Open terminal and access to the directory that contain the file
-python CSUFNavigatorUpdated.py
+- Open terminal and access to the directory that contain the file
+- Enter python CSUFNavigatorUpdated.py
