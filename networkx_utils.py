@@ -28,7 +28,35 @@ coords = {
     "Clayes Performing Arts Center": (33.88056756135152, -117.88670313385623),
 }
 
-# Category mapping: node -> category
+# right after your coords dict
+
+nicknames = {
+    "Eastside South Parking Structure": "ESPS",
+    "Eastside North Parking Structure": "ENPS",
+    "Nutwood Parking Structure":       "NPS",
+    "State College Parking Structure": "SCPS",
+    "CSUF - Lot A":                    "Lot A",
+    "CSUF - Lot G":                    "Lot G",
+
+    "Computer Science Building":       "CS",
+    "Engineering Building":            "EC",
+    "Pollak Library":                  "PL",
+    "Education-Classroom":             "ED",
+    "Humanities Building":             "GH",
+    "Gordon Hall":                     "GAH",
+    "Langsdorf Hall":                  "LH",
+    "Dan Black Hall":                  "DBH",
+    "McCarthy Hall":                   "MC",
+    "Clayes Performing Arts Center":   "CPAC",
+    "Titan Gymnasium":                 "TG",
+    "Student Recreation Center":       "SRC",
+    "Titan Student Union":             "TSU",
+    "Titan Shops":                     "TS",
+    "Student Health & Counseling Center": "SHCC",
+}
+
+
+# Category for each node
 node_category = {
     # Parking lots
     **{name: 'Parking' for name in [
@@ -62,7 +90,7 @@ node_category = {
     ]}
 }
 
-# Style mapping: category -> drawing style
+# Category styles for visualization
 category_style = {
     'Parking':          {'color': 'gray',      'shape': 's'},
     'Academic':         {'color': 'skyblue',   'shape': 'o'},
@@ -71,7 +99,6 @@ category_style = {
 
 # Define edges between directly connected buildings (sample based on campus map)
 edge_list = [
-    # Parking loop
     ('Eastside South Parking Structure', 'Eastside North Parking Structure'),
     ('Eastside North Parking Structure', 'Education-Classroom'),
     ('Eastside North Parking Structure', 'Computer Science Building'),
@@ -190,7 +217,23 @@ def draw_graph(graph, highlight_path=None, background_image=None):
         path_edges = list(zip(highlight_path, highlight_path[1:]))
         nx.draw_networkx_edges(graph, pos, edgelist=path_edges,
                                width=4, edge_color='red', ax=ax)
+        
+    label_map = {
+        node: nicknames.get(node, "")   # empty string if no nickname
+        for node in graph.nodes()
+    }
+     
+    nx.draw_networkx_labels(
+        graph,
+        pos,
+        labels=label_map,
+        font_size=8,
+        font_color='black',
+        ax=ax
+    )
     return fig
+
+
 
 def draw_mst(graph, mst_edges):
     """
