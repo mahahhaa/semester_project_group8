@@ -17,6 +17,7 @@ navigate between buidlings and organize their tasks
 - Install python (if you haven't)
 - Install Networkx : pip install networkx
 - Install Matplotlib: pip install matplotlib
+- Install Geopy: pip install geopy
 
 Run the program:
 - Open terminal and access to the directory that contain the file
