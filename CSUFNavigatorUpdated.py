@@ -165,7 +165,7 @@ class SmartCampusGUI:
         cost = distances[end]
 
         if path:
-            self.result_box.insert(tk.END, f"Shortest path from {start} to {end}:\n{' -> '.join(path)}\nCost: {cost}\n\n")
+            self.result_box.insert(tk.END, f"Shortest path from {start} to {end}:\n{' -> '.join(path)}\nCost: {cost} meter(s)\n\n")
         else:
             self.result_box.insert(tk.END, f"No path found from {start} to {end}.\n\n")
 
