@@ -165,7 +165,7 @@ class SmartCampusGUI:
         cost = distances[end]
 
         if path:
-            self.result_box.insert(tk.END, f"Shortest path from {start} to {end}:\n{' -> '.join(path)}\nCost: {cost}\n\n")
+            self.result_box.insert(tk.END, f"Shortest path from {start} to {end}:\n{' -> '.join(path)}\nCost: {cost} meter(s)\n\n")
         else:
             self.result_box.insert(tk.END, f"No path found from {start} to {end}.\n\n")
 
@@ -279,9 +279,12 @@ class SmartCampusGUI:
     def show_map(self):
         win = tk.Toplevel(self.root)
         win.title("Campus Map")
-        win.geometry("600x500")
+        win.geometry("1000x800")
 
-        fig = draw_graph(self.graph, highlight_path=getattr(self, 'last_path', None))
+        fig = draw_graph(
+        self.graph,
+        highlight_path=getattr(self, 'last_path', None),
+    )
         canvas = FigureCanvasTkAgg(fig, master=win)
         canvas.draw()
         canvas.get_tk_widget().pack(fill='both', expand=True)
