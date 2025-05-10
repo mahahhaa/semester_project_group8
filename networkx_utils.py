@@ -237,25 +237,42 @@ def draw_graph(graph, highlight_path=None, background_image=None):
 
 def draw_mst(graph, mst_edges):
     """
-    Draws the minimum spanning tree edges on the same geographic layout.
+    Draws the minimum spanning tree with:
     """
     fig, ax = plt.subplots(figsize=(14, 7), dpi=80)
-    # Recompute scaled positions inside this function
+
+    # Compute scaled positions
     lats = [lat for lat, lon in coords.values()]
     lons = [lon for lat, lon in coords.values()]
     min_lat, max_lat = min(lats), max(lats)
     min_lon, max_lon = min(lons), max(lons)
-    pos = {node: ((lon - min_lon)*100000, (lat - min_lat)*100000)
+    pos = {node: ((lon - min_lon) * 100000, (lat - min_lat) * 100000)
            for node, (lat, lon) in coords.items()}
 
-    # Draw base nodes and all edges faintly
-    nx.draw_networkx_nodes(graph, pos, node_size=300, ax=ax)
+    # Categorize nodes by color
+    node_colors = []
+    for node in graph.nodes():
+        category = graph.nodes[node].get("category", "")
+        if category == "Academic":
+            node_colors.append("skyblue")
+        elif category == "Facility":
+            node_colors.append("orange")
+        elif category == "Administrative":
+            node_colors.append("tomato")
+        else:
+            node_colors.append("gray")
+
+    # Draw all nodes
+    nx.draw_networkx_nodes(graph, pos, node_size=300, node_color=node_colors, ax=ax)
+
+    # Draw all edges faintly
     nx.draw_networkx_edges(graph, pos, ax=ax, edge_color='lightgray')
 
-    # Highlight MST edges prominently
-    nx.draw_networkx_edges(graph, pos, edgelist=mst_edges,
-                           ax=ax, edge_color='green', width=3)
+    # Draw MST edges prominently
+    nx.draw_networkx_edges(graph, pos, edgelist=mst_edges, ax=ax, edge_color='green', width=3)
 
-    # Draw labels on top
-    nx.draw_networkx_labels(graph, pos, ax=ax)
+    # Label nodes using nicknames
+    nickname_labels = {node: nicknames.get(node, node) for node in graph.nodes()}
+    nx.draw_networkx_labels(graph, pos, labels=nickname_labels, font_size=9, ax=ax)
+
     return fig
