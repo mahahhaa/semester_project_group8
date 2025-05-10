@@ -1,4 +1,5 @@
 #  CSUF Smart Campus Navigator & Task Scheduler
+#  Contributors: Kevin Quan, Maha Aljaffan, Huy Ta
 
 A Python desktop GUI application designed to help CSUF students and staff to 
 navigate between buidlings and organize their tasks
@@ -13,8 +14,10 @@ navigate between buidlings and organize their tasks
 
 # How to run GUI
 
-Install python (if you haven't):
-pip install networkx
+Install python (if you haven't)
+Install Networkx : pip install networkx
+Install Matplotlib: pip install matplotlib
 
 Run the program:
-python CSUFNavigator.py
+Open terminal and access to the directory that contain the file
+python CSUFNavigatorUpdated.py
