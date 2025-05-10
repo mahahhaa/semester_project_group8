@@ -53,9 +53,6 @@ class SmartCampusGUI:
 
         
         self.graph = build_graph()
-                
-        #Shortest Path Algorithm: Implement Dijkstra’s algorithm to find the shortest path 
-        #between two buildings. Refer to dijkstra algorithm.py.
         
         shortest_path = tk.LabelFrame(root, text="Campus Navigation", fg="blue",font=("Arial", 12, "bold"))
         shortest_path.pack(fill="x", padx=10, pady=5,)
@@ -177,7 +174,7 @@ class SmartCampusGUI:
 
         win = tk.Toplevel(self.root)
         win.title("Optimal Maintenance Route (MST)")
-        win.geometry("600x500")
+        win.geometry("800x700")
 
         fig = draw_mst(self.graph, mst_edges)
         canvas = FigureCanvasTkAgg(fig, master=win)

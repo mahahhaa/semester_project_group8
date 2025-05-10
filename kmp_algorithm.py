@@ -21,7 +21,7 @@ def kmp_search(text, pattern):
         return True
     
     lps = build_lps(pattern)
-    i = j = 0  # index for text and pattern
+    i = j = 0 
 
     while i < len(text):
         if pattern[j].lower() == text[i].lower():
